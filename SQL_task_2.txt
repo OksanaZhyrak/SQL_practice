@@ -1,0 +1,364 @@
+Задача 1. Укажите скрипт для выборки Имени, Города и Телефона покупателей,
+которые проживают в Германии
+
+SELECT contactFirstName, city, phone 
+from customers
+where country='Germany'
+
+Задача 2. Укажите скрипт для выборки имен сотрудников, чья должность Sales
+Rep (таблица employees)
+
+select firstName, jobTitle
+from employees
+where jobTitle='Sales Rep'
+
+Задача 3. Укажите скрипт для выборки покупателей из США и отсортируйте их
+по названию города по возрастанию и по кредитному лимиту по убыванию
+
+select contactFirstName, city, creditLimit
+from customers
+where country='USA'
+order by city asc, creditLimit desc
+
+Задача 4.Выбрать все заказы (orders), с датой (orderDate) отгрузки НЕ в
+промежутке с 12.12.2019 до 12.12.2020, которые еще НЕ доставлены
+(статус != Shipped)
+
+select *
+from orders
+where orderDate not between '2019-12-12' and '2020-12-12'
+and status != 'Shipped'
+
+Задача 5.Выбрать заказы (orders), которые были проданы в декабре 2020 года.
+
+select *
+from orders
+where shippedDate between '2020-12-01' and '2020-12-30' and status= 'Shipped'
+
+Задача 6.Выбрать список уникальных городов, в которых расположены покупатели
+из таблицы customers (DISTINCT). Выборку необходимо отсортировать по
+городу
+
+select distinct (city)
+from customers
+order by city
+
+Задача 7.Выберите покупателей, которые проживают в Северной Америке
+(признак можно определить, если составить список подходящих стран).
+
+select *
+from customers
+where country='USA' or country='Canada'
+
+Задача 8.Выгрузить города, в которых располагаются офисы (offices). Список должен
+быть отсортировать по алфавиту и состоять из уникальных названий, без
+дублей.
+
+select distinct (city)
+from offices
+order by city asc
+
+Задача 9.Выгрузить покупателей, которых обслуживают менеджеры из США (можно
+проверить по расположению офиса)
+
+select customerNumber,customerName,salesRepEmployeeNumber
+from customers c
+join employees e
+on c.salesRepEmployeeNumber=e.employeeNumber
+join offices o
+on e.officeCode=o.officeCode
+where o.country='USA'
+
+Задача 10.Вывести менеджеров, которые обслуживают покупателей из Франции 
+
+select distinct (employeeNumber),lastName,firstName
+from employees e
+join customers c
+on e.employeeNumber=c.salesRepEmployeeNumber
+where c.country ='France'
+
+Задача 11.Вывести список менеджеров, которые обслуживали клиентов, совершавших
+покупки с 30/10/2019 по 30/04/2020
+
+select employeeNumber,firstName, lastName
+from employees
+where employeeNumber in (
+select salesRepEmployeeNumber
+from customers
+where customerNumber in (
+select customerNumber
+from orders
+where orderDate between '2003-01-06' and '2005-06-03'))
+
+Задача 12.Сколько в базе товаров типа Vintage Cars, Classic Cars, Planes и Trucks and
+Buses? 
+
+select productLine, count(productLine)
+from products
+group by productLine
+having productLine in ('Vintage Cars', 'Classic Cars', 'Planes' , 'Trucks and Buses');
+
+Задача 13.Вычислить средний кредитный лимит покупателей для каждого из штатов.
+Вывести штат с максимальным средним кредитным лимитом.
+
+select round(avg(creditLimit), 2) as a,state
+from customers
+group by state
+order by a desc
+limit 1
+
+Задача 14.Укажите почту подчиненных Sales Manager (NA), которые работают в
+Бостоне. Это можно проверить, сопоставив employeeNumber и reportsTo в
+таблице employees.
+
+select lastName, firstName, email, city,jobTitle
+from employees e1
+join offices o2
+on e1.officeCode=o2.officeCode
+where o2.city='Boston' and e1.reportsTo is not null and jobTitle='Sales Rep'
+
+Задача 15.Вывести разницу между максимальным и минимальным платежом каждого
+клиента. Таблица payments. Вычислить разницу можно прямо в команде
+SELECT: SELECT MAX(..) - MIN(..) AS difference
+
+select p.customerNumber, max(amount), min(amount), round(max(amount)-min(amount),2) as difference
+from customers c
+join payments p
+on c.customerNumber=p.customerNumber
+group by p.customerNumber
+
+Задача 16.Вывести в одной выборке клиента, который сделал минимальный платеж, и
+клиента, который сделал максимальный платеж. Шапка выборки: ID, Имя,
+Сумма. Таблица payments, поле amount
+
+(select p.customerNumber,concat (contactFirstName,' ',contactLastName) as Name, max(amount)as am
+from customers c
+join payments p
+on c.customerNumber=p.customerNumber
+group by p.customerNumber
+order by am desc
+limit 1)
+union
+(select p.customerNumber,concat (contactFirstName,' ',contactLastName) as Name, min(amount)as am
+from customers c
+join payments p
+on c.customerNumber=p.customerNumber
+group by p.customerNumber
+order by am asc
+limit 1)
+
+Задача 17.В таблице customers есть колонка country. Сколько покупателей проживают в
+каждой из стран
+
+select count(customerNumber), country
+from customers
+group by country
+order by country;
+
+Задача 18.Каждый сотрудник работает в определенном офисе. Каждый офис находится
+в определенной стране. Сколько сотрудников работают в каждой из стран?
+
+select count(employeeNumber),country
+from employees t1
+join offices t2
+on t1.officeCode=t2.officeCode
+group by country
+order by country;
+
+Задача 19.У какого покупателя больше всего заказов?
+
+select t1.customerNumber,count(*) as c
+from customers t1
+join orders t2
+on t1.customerNumber=t2.customerNumber
+group by customerNumber
+order by c desc
+limit 1;
+
+Задача 20.Сколько покупателей ни разу не совершали заказ?
+
+select count(*)
+from customers t1
+left join orders t2
+on t1.customerNumber=t2.customerNumber
+where orderNumber is null;
+
+Задача 21.Сколько в среднем заказов сделал каждый покупатель
+
+select avg(tt)
+from
+(select count(*) as tt
+from customers t1
+join orders t2
+on t1.customerNumber=t2.customerNumber
+group by t1.customerNumber) as nn
+
+Задача 22.В каком месяце было доставлено больше всего заказов за 2004 год?
+
+select month(shippedDate) as mn, count(*) as cn
+from orders
+where year(shippedDate)=2004 and status='Shipped'
+group by mn
+order by cn desc
+limit 1;
+
+Задача 23.В каком месяце было совершено больше всего заказов клиентами из
+Франции?
+
+select month(shippedDate) as mn,count(*) cn
+from orders t1
+join customers t2
+on t1.customerNumber=t2.customerNumber
+where country='France' 
+group by mn
+order by cn desc
+limit 1;
+
+Задача 24.В какой стране было сделано больше всего заказов в Январе 2005?
+
+select country,count(*) as cn
+from customers t1
+join orders t2
+on t1.customerNumber=t2.customerNumber
+where month(shippedDate)=01 and year(shippedDate)=2005 
+group by country
+order by cn desc
+limit 1;
+
+Задача 25.Сколько покупателей обслуживается менеджерами, которые работают в
+офисе в США?
+
+select customerNumber,count(*) as cn
+from customers t1
+join employees t2
+on t1.salesRepEmployeeNumber=t2.employeeNumber
+join offices t3
+on t2.officeCode=t3.officeCode
+where t3.country='USA';
+
+Задача 26.Сколько менеджеров обслуживают покупателей из Франции?
+
+select count(distinct(salesRepEmployeeNumber))
+from customers t1
+join employees t2
+on t1.salesRepEmployeeNumber=t2.employeeNumber
+where country='France';
+
+Задача 27.Сколько уникальных товарных наименований (productCode) приобрели
+покупатели, которых обслуживают менеджеры из США?
+
+select count(distinct(t4.productCode))
+from customers t1
+join orders t2
+on t1.customerNumber=t2.customerNumber
+join orderdetails t3
+on t2.orderNumber=t3.orderNumber
+join products t4
+on t3.productCode=t4.productCode
+join employees t5
+on t1.salesRepEmployeeNumber=t5.employeeNumber
+join offices t6
+on t5.officeCode=t6.officeCode
+where t6.country='USA';
+
+Задача 28.В каком месяце было куплено больше всего заказов с товарами из категории
+Мотоциклы?
+
+select month(shippedDate) as mn, count(*) as cn
+from orders t1
+join orderdetails t2
+on t1.orderNumber=t2.orderNumber
+join products t3
+on t2.productCode=t3.productCode
+where productLine='Motorcycles' and status='Shipped'
+group by mn
+order by cn desc
+limit 1;
+
+Задача 29.В каком квартале совершено больше всего заказов покупателями с
+кредитным лимитом выше среднего?
+
+select 
+case
+when month(orderDate) between 1 and 3 then 1
+when month(orderDate) between 4 and 6 then 2
+when month(orderDate) between 7 and 9 then 3
+when month(orderDate) between 10 and 12 then 4
+end as quartal, count(*) as cn
+from orders t1
+join customers t2
+on t1.customerNumber=t2.customerNumber
+where creditLimit>( select avg(creditLimit)
+from customers ) 
+group by case
+when month(orderDate) between 1 and 3 then 1
+when month(orderDate) between 4 and 6 then 2
+when month(orderDate) between 7 and 9 then 3
+when month(orderDate) between 10 and 12 then 4
+end
+order by cn desc
+limit 1;
+
+Задача 30.Подсчитайте суммарный кредитный лимит всех покупателей для каждой
+страны
+
+select sum(creditLimit) as s, country, customerNumber
+from customers
+group by country, customerNumber
+order by s desc;
+
+Задача 31.Посчитайте средний кредитный лимит для каждой страны
+
+select sum(creditLimit) as s, country
+from customers
+group by country
+order by s desc;
+
+Задача 32.Посчитайте количество заказов, сделанные жителями, для каждой
+страны
+
+select t1.customerNumber, country, count(orderNumber) as c
+from customers t1
+join orders t2
+on t1.customerNumber=t2.customerNumber
+group by t1.customerNumber, country
+order by customerNumber;
+
+Задача 33.Посчитайте среднее количество заказов жителя из USA
+
+select round(avg(c),2)
+from
+(select t1.customerNumber, country, count(orderNumber) as c
+from customers t1
+join orders t2
+on t1.customerNumber=t2.customerNumber
+where country='USA'
+group by t1.customerNumber, country) as xx;
+
+Задача 34.Посчитайте максимальную сумму заказа для каждой страны
+
+select max(xx) as mm, country
+from
+(select round(sum(quantityOrdered*priceEach),2) as xx, country, t1.customerNumber
+from customers t1
+join orders t2
+on t1.customerNumber=t2.customerNumber
+join orderdetails t3
+on t2.orderNumber=t3.orderNumber
+group by country, t1.customerNumber) as dd
+group by country
+order by mm desc;
+
+Задача 35.Посчитайте среднее количество товаров в штуках (quantityOrdered),
+которое заказывают покупатели из Франции
+
+select round(avg(quantityOrdered),1)
+from
+(select quantityOrdered, country, t1.customerNumber
+from customers t1
+join orders t2
+on t1.customerNumber=t2.customerNumber
+join orderdetails t3
+on t2.orderNumber=t3.orderNumber
+where country='France'
+group by t1.customerNumber) as xx;
